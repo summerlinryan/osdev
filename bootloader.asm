@@ -1,17 +1,31 @@
-mov ah, 0x0e ; use teletype output mode
-mov al, 'H'
-int 0x10 ; write character in al
-mov al, 'E'
-int 0x10 ; write character in al
-mov al, 'L'
-int 0x10 ; write character in al
-int 0x10 ; write character in al
-mov al, 'O'
-int 0x10 ; write character in al
+mov ah, 0x0e ; teletype mode (for printing chars)
 
-jmp $ ; jump to current address (i.e. infinite loop)
+mov al, "1" 
+int 0x10 ; print 1
+mov al, the_secret
+int 0x10 ; print the address of the secret (as a char)
 
-; add 0 bytes up until last 2 bytes of bootloader with need to be 0xAA55
-; to tell the BIOS that this disk is bootable
+mov al, "2" 
+int 0x10 ; print 2
+mov al, [the_secret]
+int 0x10 ; print the contents at the memory address of the_secret (as a char)
+
+mov al, "3" 
+int 0x10 ; print 3
+mov al, 0x7c00
+int 0x10 ; print the address of 0x7c00 (as a char)
+
+mov al, "4",
+int 0x10
+mov bx, the_secret
+add bx, 0x7c00
+mov al, [bx]
+int 0x10 ; print the contents of the address of the_secret + 0x7c00 (the starting address of this bootloader program)
+
+the_secret:
+    db "X" ; Store "X" right before 0xaa55 magic bootable bytes
+
+jmp $
+
 times 510-($-$$) db 0
 dw 0xaa55
