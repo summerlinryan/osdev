@@ -1,31 +1,24 @@
-mov ah, 0x0e ; teletype mode (for printing chars)
+[org 0x7c00] ; offset all labels by 0x7c00 because this code will be loaded at that address by the BIOS
+mov bx, hello_world ; we'll be using bx as a pointer to the individual characters stored at hello_world
 
-mov al, "1" 
-int 0x10 ; print 1
-mov al, the_secret
-int 0x10 ; print the address of the secret (as a char)
+main:
+    mov ah, 0x0e ; teletype mode (for printing chars)
+    mov al, [bx] 
+    mov cx, 0
+    cmp cx, [bx] ; check to see if our current char is a null terminating byte
+    jne print_and_advance ; if it's not, we print and advance our pointer (BX register)
+    jmp loop ; if it is, we just enter an infinite loop
 
-mov al, "2" 
-int 0x10 ; print 2
-mov al, [the_secret]
-int 0x10 ; print the contents at the memory address of the_secret (as a char)
+print_and_advance:
+    int 0x10
+    add bx, 0x01
+    jmp main
 
-mov al, "3" 
-int 0x10 ; print 3
-mov al, 0x7c00
-int 0x10 ; print the address of 0x7c00 (as a char)
+hello_world:
+    db 'Hello world', 0
 
-mov al, "4",
-int 0x10
-mov bx, the_secret
-add bx, 0x7c00
-mov al, [bx]
-int 0x10 ; print the contents of the address of the_secret + 0x7c00 (the starting address of this bootloader program)
-
-the_secret:
-    db "X" ; Store "X" right before 0xaa55 magic bootable bytes
-
-jmp $
+loop:
+    jmp $
 
 times 510-($-$$) db 0
 dw 0xaa55
