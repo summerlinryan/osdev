@@ -1,24 +1,23 @@
-[org 0x7c00] ; offset all labels by 0x7c00 because this code will be loaded at that address by the BIOS
-mov bx, hello_world ; we'll be using bx as a pointer to the individual characters stored at hello_world
+mov ah, 0x0e
 
-main:
-    mov ah, 0x0e ; teletype mode (for printing chars)
-    mov al, [bx] 
-    mov cx, 0
-    cmp cx, [bx] ; check to see if our current char is a null terminating byte
-    jne print_and_advance ; if it's not, we print and advance our pointer (BX register)
-    jmp loop ; if it is, we just enter an infinite loop
+mov bp, 0x8000 ; start our stack at 0x8000 so that its far enough to not collide with our code stored around 0x7c00 (where the BIOS loads us)
+mov sp, bp
 
-print_and_advance:
-    int 0x10
-    add bx, 0x01
-    jmp main
+push 'A'
+push 'B'
+push 'C'
 
-hello_world:
-    db 'Hello world', 0
+pop bx
+mov al, bl
+int 0x10 ; print the top of the stack
 
-loop:
-    jmp $
+pop bx
+mov al, bl
+int 0x10 ; print the top of the stack
 
+mov al, [0x7ffe] ; print the character that is starts after the first 2 bytes of the stack (since the stack grows downwards)
+int 0x10 ; print the top of the stack
+
+jmp $
 times 510-($-$$) db 0
 dw 0xaa55
