@@ -1,23 +1,18 @@
-mov ah, 0x0e
+[org 0x7c00] ; memory offset of the bootloader (because of the BIOS)
 
-mov bp, 0x8000 ; start our stack at 0x8000 so that its far enough to not collide with our code stored around 0x7c00 (where the BIOS loads us)
-mov sp, bp
+mov bp, 0x8000 ; set base pointer of our stack to 0x8000 (which is really far away from 0x7c00 that the bootloader is loaded into)
+mov sp, bp ; the top of the stack is the same as the bottom of the stack when we first initializing the stack
 
-push 'A'
-push 'B'
-push 'C'
+mov dx, 0xabcd
+call print_hex 
 
-pop bx
-mov al, bl
-int 0x10 ; print the top of the stack
-
-pop bx
-mov al, bl
-int 0x10 ; print the top of the stack
-
-mov al, [0x7ffe] ; print the character that is starts after the first 2 bytes of the stack (since the stack grows downwards)
-int 0x10 ; print the top of the stack
+mov dx, 0x1ab
+call print_hex
 
 jmp $
-times 510-($-$$) db 0
-dw 0xaa55
+
+%include "./print_string.asm"
+%include "./print_hex.asm"
+
+times 510-($-$$) db 0 ; pad with 0s until the last 2 bytes of the 512 byte boot sector 
+dw 0xaa55 ; magic number that tells the BIOS this is bootable
